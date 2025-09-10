@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Eye, Share, ArrowRightCircle, MapPinned, MailWarning } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Eye, Share, ArrowRightCircle, ArrowLeftCircle, MapPinned, MailWarning, CalendarClock } from "lucide-react";
 
 
 interface Bill {
@@ -20,8 +20,11 @@ interface BillCardProps {
 export default function BillCard({ bills }: BillCardProps) {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [action, setAction] = useState<"like" | "dislike" | "skip" | "back" | null>(null);
 
-  const nextBill = (dir: number) => {
+
+  const nextBill = (dir: number, act: "like" | "dislike" | "skip" | "back") => {
+    setAction(act);
     setDirection(dir);
     setIndex((prev) => (prev + (dir || 1) + bills.length) % bills.length);
   };
@@ -29,14 +32,32 @@ export default function BillCard({ bills }: BillCardProps) {
   const totalBills = 20;
   const progressPercent = ((index + 1) / totalBills) * 100;
 
-const getCallToAction = () => {
+  const getCallToAction = () => {
     const bill = bills[index];
     if (bill.status.toLowerCase().includes("floor") || bill.status.toLowerCase().includes("voting")) {
-      return `Voting soon! Make your voice count and send a letter.`;
+      return `Voting soon. Send a letter!`;
     } else if (bill.status.toLowerCase().includes("committee")) {
       return `In committee. Share your opinion early.`;
     }
     return "";
+  };
+
+
+  const variants = {
+    enter: (dir: number) => ({
+      opacity: 0,
+      x: dir === 0 ? 0 : dir * 100,
+      y: 0,
+      borderColor: "black", // reset when new enters
+    }),
+    center: { opacity: 1, x: 0, y: 0, borderColor: "black" },
+    exit: ({ direction, action }: { direction: number; action: string | null }) => {
+      if (action === "like") return { opacity: 0, x: 300, rotate: 10, borderColor: "#166534" };
+      if (action === "dislike") return { opacity: 0, x: -300, rotate: -10, borderColor: "#991b1b" };
+      if (action === "skip") return { opacity: 0, y: 300 };
+      if (action === "back") return { opacity: 0, y: -300 };
+      return { opacity: 0 };
+    },
   };
 
   return (
@@ -53,27 +74,37 @@ const getCallToAction = () => {
         </div>
       </div>
       
-      <AnimatePresence mode="wait" custom={direction}>
+      <AnimatePresence mode="wait" custom={{direction, action}}>
         <motion.div
           key={index}
-          custom={direction}
-          initial={{ opacity: 0, x: direction === 0 ? 0 : direction * 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: direction * -200, rotate: direction * 10 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-md p-8"
+          custom={{ direction, action }}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.9 }}
+          className="w-full max-w-md mx-auto shadow-xl border-3 border-black rounded-2xl p-6 m-6"
+          style={{
+            borderColor:
+              action === "like" ? "#166534" : // green-500
+              action === "dislike" ? "#991b1b" : // red-500
+              "black", // default
+          }}
         >
-          <div className="w-full max-w-md mx-auto shadow-xl border-2 border-black rounded-2xl p-6">
-            
+         
             <div className="flex justify-between items-center mb-2">
-                <p className="flex items-center text-sm mb-2"><MapPinned className="w-5 h-5 text-black mr-1" /> {bills[index].state}</p>
-                
-                <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-800">
-                  {bills[index].status}
+                <p className="flex items-center text-sm mb-2">
+                  <MapPinned className="w-5 h-5 text-black mr-1" /> {bills[index].state}
+                </p>
+                <span className="mb-2 text-xs font-medium px-2 py-1 rounded-full bg-gray-200 text-gray-800">
+                  <p className="flex items-center text-sm">
+                    <CalendarClock className="w-5 h-5 text-black mr-1" />{bills[index].status}
+                  </p>
                 </span>
             </div>
+
             <h2 className="text-3xl text-center font-bold mb-3">{bills[index].title}</h2>
-            <div className="flex flex-wrap justify-center gap-2 mb-8">
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
               {bills[index].keyIssues.map((issue) => (
                 <span
                   key={issue}
@@ -84,33 +115,18 @@ const getCallToAction = () => {
               ))}
             </div>
 
-            <p className="text-lg mb-10 text-center line-clamp-2">{bills[index].summary}</p>
-
-            <div className="flex justify-around mb-4 text-center">
-              <div>
-                <ThumbsUp className="w-5 h-5 mx-auto" />
-                <p className="text-xs">{bills[index].stats.like}</p>
-              </div>
-              <div>
-                <ThumbsDown className="w-5 h-5 mx-auto" />
-                <p className="text-xs">{bills[index].stats.dislike}</p>
-              </div>
-              <div>
-                <Eye className="w-5 h-5 mx-auto" />
-                <p className="text-xs">{bills[index].stats.watch}</p>
-              </div>
-              
-            </div>
+            <p className="text-lg mb-6 text-center ">{bills[index].summary}</p>
             
-
-          {/* Call to Action */}
-          {getCallToAction() && (
-            <p className="flex items-center justify-center text-xs text-center text-gray-600 font-semibold mb-4">
-              <MailWarning className="w-4 h-4 text-red-800 mr-1" />
-              {getCallToAction()}
-              <MailWarning className="w-4 h-4 text-red-800 mr-1" />
-            </p>
-          )}
+            <hr className="border-t-2 border-gray-300 my-4" />
+            
+            {/* Call to Action */}
+            {getCallToAction() && (
+              <p className="flex items-center justify-center text-xs text-center text-black font-semibold mb-4">
+                <MailWarning className="w-5 h-5 text-red-800 mr-1" />
+                {getCallToAction()}
+                <MailWarning className="w-5 h-5 text-red-800 ml-1" />
+              </p>
+            )}
 
 
             
@@ -154,8 +170,23 @@ const getCallToAction = () => {
               </button>
             </div>
 
-           
-          </div>
+           <hr className="border-t-2 border-gray-300 my-4" />
+            <div className="flex justify-around mb-4 text-center">
+              <div>
+                <ThumbsUp className="w-5 h-5 mx-auto" />
+                <p className="text-xs">{bills[index].stats.like}</p>
+              </div>
+              <div>
+                <ThumbsDown className="w-5 h-5 mx-auto" />
+                <p className="text-xs">{bills[index].stats.dislike}</p>
+              </div>
+              <div>
+                <Eye className="w-5 h-5 mx-auto" />
+                <p className="text-xs">{bills[index].stats.watch}</p>
+              </div>
+              
+            </div>
+          
         </motion.div>
       </AnimatePresence>
 
@@ -163,25 +194,34 @@ const getCallToAction = () => {
         <button
           className="border-2 border-black rounded-xl px-10 text-lg font-semibold"
           style={{backgroundColor: "#E5E7EB", border: "2px solid black"}}
-          onClick={() => nextBill(-1)}
+          onClick={() => nextBill(0, "back")}
+        >
+          <ArrowLeftCircle className="w-16 h-16 text-black" />
+        </button>
+        <button
+          className="border-2 border-black rounded-xl px-10 text-lg font-semibold"
+          style={{backgroundColor: "#E5E7EB", border: "2px solid black"}}
+          onClick={() => nextBill(-1, "dislike")}
         >
           <ThumbsDown className="w-16 h-16 text-black" />
         </button>
+        
         <button
           className="border-2 border-black rounded-xl px-10 text-lg font-semibold"
           style={{backgroundColor: "#E5E7EB", border: "2px solid black"}}
-          onClick={() => nextBill(0)}
-        >
-          <ArrowRightCircle className="w-16 h-16 text-black" />
-        </button>
-        <button
-          className="border-2 border-black rounded-xl px-10 text-lg font-semibold"
-          style={{backgroundColor: "#E5E7EB", border: "2px solid black"}}
-          onClick={() => nextBill(1)}
+          onClick={() => nextBill(1, "like")}
         >
           <ThumbsUp className="w-16 h-16 text-black" />
 
         </button>
+        <button
+          className="border-2 border-black rounded-xl px-10 text-lg font-semibold"
+          style={{backgroundColor: "#E5E7EB", border: "2px solid black"}}
+          onClick={() => nextBill(0, "skip")}
+        >
+          <ArrowRightCircle className="w-16 h-16 text-black" />
+        </button>
+        
       </div>
     </div>
   );
