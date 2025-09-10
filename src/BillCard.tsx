@@ -51,7 +51,7 @@ export default function BillCard({ bills }: BillCardProps) {
       borderColor: "black", // reset when new enters
     }),
     center: { opacity: 1, x: 0, y: 0, borderColor: "black" },
-    exit: ({ direction, action }: { direction: number; action: string | null }) => {
+    exit: ({ action }: { action: string | null }) => {
       if (action === "like") return { opacity: 0, x: 300, rotate: 10, borderColor: "#166534" };
       if (action === "dislike") return { opacity: 0, x: -300, rotate: -10, borderColor: "#991b1b" };
       if (action === "skip") return { opacity: 0, y: 300 };
@@ -61,18 +61,23 @@ export default function BillCard({ bills }: BillCardProps) {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-white text-black px-6">
-      <div className="justify-center ml-auto mr-6">
-        <p className="text-s text-gray-700 mt-1 text-right pb-2">
-            Daily Progress: {index + 1} / {totalBills} Bills 
-        </p>
-        <div className="w-full h-4 bg-gray-200 rounded-full">
-            <div
-            className="h-4 pr-6 bg-gray-600 rounded-full transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
-            ></div>
+    <div className="flex flex-col items-center min-h-screen bg-white text-black px-4">
+      <div className="w-full max-w-sm">
+        <div className="flex justify-end">
+          <div className="text-right">
+            <p className="text-s text-gray-700 mt-1 pb-2">
+              Daily Progress: {index + 1} / {totalBills} Bills 
+            </p>
+            <div className="w-64 h-4 bg-gray-200 rounded-full">
+              <div
+                className="h-4 bg-gray-600 rounded-full transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
+      
       
       <AnimatePresence mode="wait" custom={{direction, action}}>
         <motion.div
@@ -83,7 +88,7 @@ export default function BillCard({ bills }: BillCardProps) {
           animate="center"
           exit="exit"
           transition={{ duration: 0.9 }}
-          className="w-full max-w-md mx-auto shadow-xl border-3 border-black rounded-2xl p-6 m-6"
+          className="w-full max-w-sm shadow-xl border-3 border-black rounded-2xl p-6 m-6"
           style={{
             borderColor:
               action === "like" ? "#166534" : // green-500
@@ -190,36 +195,36 @@ export default function BillCard({ bills }: BillCardProps) {
         </motion.div>
       </AnimatePresence>
 
-      <div className="flex justify-center gap-6 mt-2 pb-4">
+      <div className="flex justify-center max-w-sm gap-4 pb-4">
         <button
-          className="border-2 border-black rounded-xl px-10 text-lg font-semibold"
+          className="border-2 border-black rounded-xl px-6 text-lg font-semibold"
           style={{backgroundColor: "#E5E7EB", border: "2px solid black"}}
           onClick={() => nextBill(0, "back")}
         >
-          <ArrowLeftCircle className="w-16 h-16 text-black" />
+          <ArrowLeftCircle className="w-10 h-10 text-black" />
         </button>
         <button
-          className="border-2 border-black rounded-xl px-10 text-lg font-semibold"
+          className="border-2 border-black rounded-xl px-6 text-lg font-semibold"
           style={{backgroundColor: "#E5E7EB", border: "2px solid black"}}
           onClick={() => nextBill(-1, "dislike")}
         >
-          <ThumbsDown className="w-16 h-16 text-black" />
+          <ThumbsDown className="w-10 h-10 text-black" />
         </button>
         
         <button
-          className="border-2 border-black rounded-xl px-10 text-lg font-semibold"
+          className="border-2 border-black rounded-xl px-6 text-lg font-semibold"
           style={{backgroundColor: "#E5E7EB", border: "2px solid black"}}
           onClick={() => nextBill(1, "like")}
         >
-          <ThumbsUp className="w-16 h-16 text-black" />
+          <ThumbsUp className="w-10 h-10 text-black" />
 
         </button>
         <button
-          className="border-2 border-black rounded-xl px-10 text-lg font-semibold"
+          className="border-2 border-black rounded-xl px-6 text-lg font-semibold"
           style={{backgroundColor: "#E5E7EB", border: "2px solid black"}}
           onClick={() => nextBill(0, "skip")}
         >
-          <ArrowRightCircle className="w-16 h-16 text-black" />
+          <ArrowRightCircle className="w-10 h-10 text-black" />
         </button>
         
       </div>
